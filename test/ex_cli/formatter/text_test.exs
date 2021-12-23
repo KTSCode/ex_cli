@@ -11,6 +11,8 @@ defmodule ExCLI.Formatter.TextTest do
      hello   Greets the user
   """
 
+  @simple_cli_usage "usage: mycli [--verbose]  "
+
   @complex_cli_mix_usage """
   usage: mycli [-v] [--debug] [--base-directory <directory>] [--log-file <file>]
 
@@ -28,6 +30,11 @@ defmodule ExCLI.Formatter.TextTest do
 
   test "format" do
     assert ExCLI.Formatter.Text.format(MyApp.ComplexCLI.__app__()) == expected(@complex_cli_usage)
+  end
+
+  test "format if only one default command with no args" do
+    assert ExCLI.Formatter.Text.format(MyApp.SampleCLIWithDefaultCommand.__app__()) ==
+             expected(@simple_cli_usage)
   end
 
   test "format for mix" do

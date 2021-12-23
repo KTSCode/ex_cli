@@ -10,15 +10,41 @@ defmodule ExCLI.Formatter.Text do
       |> Keyword.put_new(:default_command, app.default_command)
       |> make_app_opts()
 
-    command = if is_nil(app.default_command), do: "<command>", else: "[<command>]"
-    arguments = format_options(app.options) ++ [command, "[<args>]"]
+    command =
+      cond do
+        is_nil(app.default_command) ->
+          "<command>"
+
+        Enum.count(app.commands) == 1 ->
+          ""
+
+        true ->
+          "[<command>]"
+      end
+
+    # If none of the commands have args don't show [<args>]
+    command_args =
+      if Enum.empty?(Enum.reject(app.commands, &Enum.empty?(&1.arguments))) do
+        ""
+      else
+        "[<args>]"
+      end
+
+    arguments = format_options(app.options) ++ [command, command_args]
     formatted_arguments = Util.pretty_join(arguments, opts)
+
+    commands =
+      if command == "" do
+        ""
+      else
+        "\n#{opts[:newline]}Commands#{opts[:newline]}" <>
+          String.duplicate(opts[:pad_with], 3) <>
+          format_commands(app.commands, opts)
+      end
 
     opts[:banner] <>
       formatted_arguments <>
-      "\n#{opts[:newline]}Commands#{opts[:newline]}" <>
-      String.duplicate(opts[:pad_with], 3) <>
-      format_commands(app.commands, opts)
+      commands
   end
 
   def format_options(options, opts \\ []) do
